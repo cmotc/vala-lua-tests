@@ -1,56 +1,56 @@
 body {
-    background-color: #004159;
+    background-color: #356244;
     font-family: "Lucida Console", Monaco, monospace;
     color: #004159;
 }
 
 h1 {
-    background-color: #65A8C4;
+    background-color: #4B8C61;
     text-align: center;
 }
 h2 {
-    background-color: #65A8C4;
+    background-color: #4B8C61;
     text-align: center;
 }
 h3 {
-    background-color: #65A8C4;
+    background-color: #4B8C61;
     text-align: center;
 }
 h4 {
-    background-color: #65A8C4;
+    background-color: #4B8C61;
     text-align: center;
 }
 h5 {
-    background-color: #65A8C4;
+    background-color: #4B8C61;
     text-align: center;
 }
 h6 {
-    background-color: #65A8C4;
+    background-color: #4B8C61;
     text-align: center;
 }
 
 div {
-    background-color: #AACEE2;
+    background-color: #AAD1B7;
     text-indent: 50px;
 }
 
 p {
-    background-color: #AACEE2;
+    background-color: #AAD1B7;
     text-indent: 50px;
 }
 
 a {
-    color: #00C590;
+    color: #FFD933;
 }
 
 a:visited {
-    color: #8C65D3;
+    color: #FFE933;
 }
 
 code {
     font-size: small;
     text-indent: 0px;
     color: #73EBAE;
-    background-color: #004159;
+    background-color: #356244;
     text-align: justify;
 }
