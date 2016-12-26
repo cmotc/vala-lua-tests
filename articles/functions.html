@@ -12,4 +12,85 @@
     <body>
 <div id=UseLuafunctionfromValafunction>
 <h1>This is an example of how to call functions in lua scripts from Vala programs</h1>
+
+<p>In this example we're going to learn the simplest way to load external lua code
+from a file and how to call a function from that lua code within Vala.</p>
+
+<p>First, let's create a file named code.lua containing a function.</p>
+
+<pre><code>    function test_code()
+        print "Lua Code From Vala Code!"
+        my_func(33)
+    end
+</code></pre>
+
+<p>In this example we'll only create one version of the function to register with
+the Lua virtual machine.</p>
+
+<pre><code>    int my_func (LuaVM vm) {
+        stdout.printf ("Vala Code From Lua Code! (%f)\n", vm.to_number (1));
+        return 1;
+    }
+</code></pre>
+
+<p>Now, create the main function like you <a href="articles/0example.html">did before</a>,
+instantiating the Virtual Machine and preparing the libraries, register your
+function, and then...</p>
+
+<pre><code>    static int main (string[] args) {
+        var vm = new LuaVM ();
+        vm.open_libs ();
+        vm.register ("my_func", my_func);
+</code></pre>
+
+<p>Load the file containing the Lua code into the virtual machine using the
+.do_file(string path_to_code) function. Vala will use the relative path if
+you use a relative path, or an absolute path if you use an absolute path.</p>
+
+<pre><code>        vm.do_file("code.lua");
+</code></pre>
+
+<p>Now finally, use the .do_string(string lua_script) to call the function you
+just loaded.</p>
+
+<pre><code>        vm.do_string("""test_code()""");
+        return 0;
+    }
+</code></pre>
+
+<p>And that's how you load a script containing functions and call a function in a
+Lua script from Vala.</p>
+
+<h3>Compile Line</h3>
+
+<p>valac --save-temps --pkg lua -X -llua5.1 callafunction.vala -o callafunction</p>
+
+<h3>Full Example Code</h3>
+
+<p><strong>Lua Script(code.lua)</strong></p>
+
+<pre><code>    function test_code()
+        print "Lua Code From Vala Code!"
+        my_func(33)
+    end
+</code></pre>
+
+<p><strong>Vala Code(callafunction.vala)</strong></p>
+
+<pre><code>    using Lua;
+
+    int my_func (LuaVM vm) {
+        stdout.printf ("Vala Code From Lua Code! (%f)\n", vm.to_number (1));
+        return 1;
+    }
+
+    static int main (string[] args) {
+        var vm = new LuaVM ();
+        vm.open_libs ();
+        vm.register ("my_func", my_func);
+        vm.do_file("code.lua");
+        vm.do_string("""test_code()""");
+        return 0;
+    }
+</code></pre>
 </div>

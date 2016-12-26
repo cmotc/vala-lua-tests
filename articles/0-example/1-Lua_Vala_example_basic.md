@@ -1,7 +1,6 @@
 This is a straightforward copy of the Lua example from the Vala web site
 ========================================================================
 
-
 First, make sure you include the Lua namespace in your Vala program.
 
         using Lua;
