@@ -21,7 +21,7 @@ for ARTICLE in $ARTICLES_LISTINGS; do
 		echo "###$ARTICLE_CATEGORY" | markdown >> toc.html
 	fi
 	DIV_ID=$(echo "$ARTICLE_TITLE" | tr -d " ")
-	echo "  * [$ARTICLE_TITLE](/articles/$ARTICLE_CATEGORY_NOSPACES.html#$DIV_ID) " | markdown >> toc.html
+	echo "  * [$ARTICLE_TITLE](articles/$ARTICLE_CATEGORY_NOSPACES.html#$DIV_ID) " | markdown >> toc.html
 	echo "<div id="$DIV_ID">" >> articles/$ARTICLE_CATEGORY_NOSPACES.html
 	markdown $ARTICLE >> articles/$ARTICLE_CATEGORY_NOSPACES.html
 	echo "</div>" >> articles/$ARTICLE_CATEGORY_NOSPACES.html
