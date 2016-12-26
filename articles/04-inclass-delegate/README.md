@@ -1,4 +1,1 @@
-This is how to use Delegates to call Instance functions in Vala Classes
-=======================================================================
-
-I'm pretty sure this is how you do it. I'm pretty sure.
+01-Call_Vala_delegate_functions_from_Lua.md

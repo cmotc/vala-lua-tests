@@ -1,2 +1,1 @@
-This is how to use lua to control static functions in Vala
-==========================================================
+01-Call_Vala_static_functions_from_Lua.md

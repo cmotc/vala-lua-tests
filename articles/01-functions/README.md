@@ -1,3 +1,1 @@
-This is an example of how to call functions in lua scripts from Vala programs
-=============================================================================
-
+01-Use_Lua_function_from_Vala_function.md

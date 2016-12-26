@@ -1,5 +1,5 @@
 #! /bin/bash
-ARTICLES_LISTINGS=$(find ./articles/ -name "*.md" 2> /dev/null | sort)
+ARTICLES_LISTINGS=$(find ./articles/ -type f -name "*.md" 2> /dev/null | sort)
 rm articles/*.html
 cat "meta/main.html" > toc.html
 markdown toc/1-toc-header.md >> toc.html
