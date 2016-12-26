@@ -1,1 +1,1 @@
-01-Dont_use_Vala_instance_functions_themselves.md
+./1-Dont_use_Vala_instance_functions_themselves.md
