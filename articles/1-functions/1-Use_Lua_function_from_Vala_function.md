@@ -19,7 +19,7 @@ the Lua virtual machine.
             return 1;
         }
 
-Now, create the main function like you [did before](articles/0example.html),
+Now, create the main function like you [did before](0example.html),
 instantiating the Virtual Machine and preparing the libraries, register your
 function, and then...
 
