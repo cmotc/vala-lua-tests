@@ -9,25 +9,75 @@
 #include <stdlib.h>
 #include <string.h>
 #include <lauxlib.h>
+#include <gobject/gvaluecollector.h>
 
+
+#define LUATEST_TYPE_LUA_TEST (luatest_lua_test_get_type ())
+#define LUATEST_LUA_TEST(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LUATEST_TYPE_LUA_TEST, LuatestLuaTest))
+#define LUATEST_LUA_TEST_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LUATEST_TYPE_LUA_TEST, LuatestLuaTestClass))
+#define LUATEST_IS_LUA_TEST(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LUATEST_TYPE_LUA_TEST))
+#define LUATEST_IS_LUA_TEST_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), LUATEST_TYPE_LUA_TEST))
+#define LUATEST_LUA_TEST_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), LUATEST_TYPE_LUA_TEST, LuatestLuaTestClass))
+
+typedef struct _LuatestLuaTest LuatestLuaTest;
+typedef struct _LuatestLuaTestClass LuatestLuaTestClass;
+typedef struct _LuatestLuaTestPrivate LuatestLuaTestPrivate;
 #define _lua_close0(var) ((var == NULL) ? NULL : (var = (lua_close (var), NULL)))
+typedef struct _LuatestParamSpecLuaTest LuatestParamSpecLuaTest;
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _luatest_lua_test_unref0(var) ((var == NULL) ? NULL : (var = (luatest_lua_test_unref (var), NULL)))
+
+struct _LuatestLuaTest {
+	GTypeInstance parent_instance;
+	volatile int ref_count;
+	LuatestLuaTestPrivate * priv;
+};
+
+struct _LuatestLuaTestClass {
+	GTypeClass parent_class;
+	void (*finalize) (LuatestLuaTest *self);
+};
+
+struct _LuatestLuaTestPrivate {
+	lua_State* VM;
+	lua_CFunction my_func_delegate;
+};
+
+struct _LuatestParamSpecLuaTest {
+	GParamSpec parent_instance;
+};
 
 
+static gpointer luatest_lua_test_parent_class = NULL;
 
-gint lua_test_my_func (lua_State* vm);
-gint lua_test_main (gchar** args, int args_length1);
-static gint _lua_test_my_func_lua_cfunction (lua_State* vm);
+gpointer luatest_lua_test_ref (gpointer instance);
+void luatest_lua_test_unref (gpointer instance);
+GParamSpec* luatest_param_spec_lua_test (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void luatest_value_set_lua_test (GValue* value, gpointer v_object);
+void luatest_value_take_lua_test (GValue* value, gpointer v_object);
+gpointer luatest_value_get_lua_test (const GValue* value);
+GType luatest_lua_test_get_type (void) G_GNUC_CONST;
+#define LUATEST_LUA_TEST_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), LUATEST_TYPE_LUA_TEST, LuatestLuaTestPrivate))
+enum  {
+	LUATEST_LUA_TEST_DUMMY_PROPERTY
+};
+gint luatest_lua_test_my_func (LuatestLuaTest* self, lua_State* vm);
+LuatestLuaTest* luatest_lua_test_new (void);
+LuatestLuaTest* luatest_lua_test_construct (GType object_type);
+void luatest_lua_test_LuaDoString (LuatestLuaTest* self, const gchar* code);
+static void luatest_lua_test_finalize (LuatestLuaTest* obj);
+gint luatest_main (gchar** args, int args_length1);
 
 
-gint lua_test_my_func (lua_State* vm) {
+gint luatest_lua_test_my_func (LuatestLuaTest* self, lua_State* vm) {
 	gint result = 0;
 	FILE* _tmp0_ = NULL;
 	lua_State* _tmp1_ = NULL;
 	gdouble _tmp2_ = 0.0;
+	g_return_val_if_fail (self != NULL, 0);
 	g_return_val_if_fail (vm != NULL, 0);
 	_tmp0_ = stdout;
-	_tmp1_ = vm;
+	_tmp1_ = self->priv->VM;
 	_tmp2_ = lua_tonumber (_tmp1_, 1);
 	fprintf (_tmp0_, "Vala Code From Lua Code! (%f)\n", _tmp2_);
 	result = 1;
@@ -35,32 +85,221 @@ gint lua_test_my_func (lua_State* vm) {
 }
 
 
-static gint _lua_test_my_func_lua_cfunction (lua_State* vm) {
-	gint result;
-	result = lua_test_my_func (vm);
-	return result;
+LuatestLuaTest* luatest_lua_test_construct (GType object_type) {
+	LuatestLuaTest* self = NULL;
+	lua_State* _tmp0_ = NULL;
+	lua_State* _tmp1_ = NULL;
+	lua_CFunction _tmp2_ = NULL;
+	self = (LuatestLuaTest*) g_type_create_instance (object_type);
+	_tmp0_ = self->priv->VM;
+	luaL_openlibs (_tmp0_);
+	self->priv->my_func_delegate = (lua_CFunction) luatest_lua_test_my_func;
+	_tmp1_ = self->priv->VM;
+	_tmp2_ = self->priv->my_func_delegate;
+	lua_register (_tmp1_, "my_func", _tmp2_);
+	return self;
 }
 
 
-gint lua_test_main (gchar** args, int args_length1) {
+LuatestLuaTest* luatest_lua_test_new (void) {
+	return luatest_lua_test_construct (LUATEST_TYPE_LUA_TEST);
+}
+
+
+void luatest_lua_test_LuaDoString (LuatestLuaTest* self, const gchar* code) {
+	lua_State* _tmp0_ = NULL;
+	const gchar* _tmp1_ = NULL;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (code != NULL);
+	_tmp0_ = self->priv->VM;
+	_tmp1_ = code;
+	luaL_dostring (_tmp0_, _tmp1_);
+}
+
+
+static void luatest_value_lua_test_init (GValue* value) {
+	value->data[0].v_pointer = NULL;
+}
+
+
+static void luatest_value_lua_test_free_value (GValue* value) {
+	if (value->data[0].v_pointer) {
+		luatest_lua_test_unref (value->data[0].v_pointer);
+	}
+}
+
+
+static void luatest_value_lua_test_copy_value (const GValue* src_value, GValue* dest_value) {
+	if (src_value->data[0].v_pointer) {
+		dest_value->data[0].v_pointer = luatest_lua_test_ref (src_value->data[0].v_pointer);
+	} else {
+		dest_value->data[0].v_pointer = NULL;
+	}
+}
+
+
+static gpointer luatest_value_lua_test_peek_pointer (const GValue* value) {
+	return value->data[0].v_pointer;
+}
+
+
+static gchar* luatest_value_lua_test_collect_value (GValue* value, guint n_collect_values, GTypeCValue* collect_values, guint collect_flags) {
+	if (collect_values[0].v_pointer) {
+		LuatestLuaTest* object;
+		object = collect_values[0].v_pointer;
+		if (object->parent_instance.g_class == NULL) {
+			return g_strconcat ("invalid unclassed object pointer for value type `", G_VALUE_TYPE_NAME (value), "'", NULL);
+		} else if (!g_value_type_compatible (G_TYPE_FROM_INSTANCE (object), G_VALUE_TYPE (value))) {
+			return g_strconcat ("invalid object type `", g_type_name (G_TYPE_FROM_INSTANCE (object)), "' for value type `", G_VALUE_TYPE_NAME (value), "'", NULL);
+		}
+		value->data[0].v_pointer = luatest_lua_test_ref (object);
+	} else {
+		value->data[0].v_pointer = NULL;
+	}
+	return NULL;
+}
+
+
+static gchar* luatest_value_lua_test_lcopy_value (const GValue* value, guint n_collect_values, GTypeCValue* collect_values, guint collect_flags) {
+	LuatestLuaTest** object_p;
+	object_p = collect_values[0].v_pointer;
+	if (!object_p) {
+		return g_strdup_printf ("value location for `%s' passed as NULL", G_VALUE_TYPE_NAME (value));
+	}
+	if (!value->data[0].v_pointer) {
+		*object_p = NULL;
+	} else if (collect_flags & G_VALUE_NOCOPY_CONTENTS) {
+		*object_p = value->data[0].v_pointer;
+	} else {
+		*object_p = luatest_lua_test_ref (value->data[0].v_pointer);
+	}
+	return NULL;
+}
+
+
+GParamSpec* luatest_param_spec_lua_test (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags) {
+	LuatestParamSpecLuaTest* spec;
+	g_return_val_if_fail (g_type_is_a (object_type, LUATEST_TYPE_LUA_TEST), NULL);
+	spec = g_param_spec_internal (G_TYPE_PARAM_OBJECT, name, nick, blurb, flags);
+	G_PARAM_SPEC (spec)->value_type = object_type;
+	return G_PARAM_SPEC (spec);
+}
+
+
+gpointer luatest_value_get_lua_test (const GValue* value) {
+	g_return_val_if_fail (G_TYPE_CHECK_VALUE_TYPE (value, LUATEST_TYPE_LUA_TEST), NULL);
+	return value->data[0].v_pointer;
+}
+
+
+void luatest_value_set_lua_test (GValue* value, gpointer v_object) {
+	LuatestLuaTest* old;
+	g_return_if_fail (G_TYPE_CHECK_VALUE_TYPE (value, LUATEST_TYPE_LUA_TEST));
+	old = value->data[0].v_pointer;
+	if (v_object) {
+		g_return_if_fail (G_TYPE_CHECK_INSTANCE_TYPE (v_object, LUATEST_TYPE_LUA_TEST));
+		g_return_if_fail (g_value_type_compatible (G_TYPE_FROM_INSTANCE (v_object), G_VALUE_TYPE (value)));
+		value->data[0].v_pointer = v_object;
+		luatest_lua_test_ref (value->data[0].v_pointer);
+	} else {
+		value->data[0].v_pointer = NULL;
+	}
+	if (old) {
+		luatest_lua_test_unref (old);
+	}
+}
+
+
+void luatest_value_take_lua_test (GValue* value, gpointer v_object) {
+	LuatestLuaTest* old;
+	g_return_if_fail (G_TYPE_CHECK_VALUE_TYPE (value, LUATEST_TYPE_LUA_TEST));
+	old = value->data[0].v_pointer;
+	if (v_object) {
+		g_return_if_fail (G_TYPE_CHECK_INSTANCE_TYPE (v_object, LUATEST_TYPE_LUA_TEST));
+		g_return_if_fail (g_value_type_compatible (G_TYPE_FROM_INSTANCE (v_object), G_VALUE_TYPE (value)));
+		value->data[0].v_pointer = v_object;
+	} else {
+		value->data[0].v_pointer = NULL;
+	}
+	if (old) {
+		luatest_lua_test_unref (old);
+	}
+}
+
+
+static void luatest_lua_test_class_init (LuatestLuaTestClass * klass) {
+	luatest_lua_test_parent_class = g_type_class_peek_parent (klass);
+	((LuatestLuaTestClass *) klass)->finalize = luatest_lua_test_finalize;
+	g_type_class_add_private (klass, sizeof (LuatestLuaTestPrivate));
+}
+
+
+static void luatest_lua_test_instance_init (LuatestLuaTest * self) {
+	lua_State* _tmp0_ = NULL;
+	self->priv = LUATEST_LUA_TEST_GET_PRIVATE (self);
+	_tmp0_ = (lua_State*) luaL_newstate ();
+	self->priv->VM = _tmp0_;
+	self->ref_count = 1;
+}
+
+
+static void luatest_lua_test_finalize (LuatestLuaTest* obj) {
+	LuatestLuaTest * self;
+	self = G_TYPE_CHECK_INSTANCE_CAST (obj, LUATEST_TYPE_LUA_TEST, LuatestLuaTest);
+	g_signal_handlers_destroy (self);
+	_lua_close0 (self->priv->VM);
+}
+
+
+GType luatest_lua_test_get_type (void) {
+	static volatile gsize luatest_lua_test_type_id__volatile = 0;
+	if (g_once_init_enter (&luatest_lua_test_type_id__volatile)) {
+		static const GTypeValueTable g_define_type_value_table = { luatest_value_lua_test_init, luatest_value_lua_test_free_value, luatest_value_lua_test_copy_value, luatest_value_lua_test_peek_pointer, "p", luatest_value_lua_test_collect_value, "p", luatest_value_lua_test_lcopy_value };
+		static const GTypeInfo g_define_type_info = { sizeof (LuatestLuaTestClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) luatest_lua_test_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (LuatestLuaTest), 0, (GInstanceInitFunc) luatest_lua_test_instance_init, &g_define_type_value_table };
+		static const GTypeFundamentalInfo g_define_type_fundamental_info = { (G_TYPE_FLAG_CLASSED | G_TYPE_FLAG_INSTANTIATABLE | G_TYPE_FLAG_DERIVABLE | G_TYPE_FLAG_DEEP_DERIVABLE) };
+		GType luatest_lua_test_type_id;
+		luatest_lua_test_type_id = g_type_register_fundamental (g_type_fundamental_next (), "LuatestLuaTest", &g_define_type_info, &g_define_type_fundamental_info, 0);
+		g_once_init_leave (&luatest_lua_test_type_id__volatile, luatest_lua_test_type_id);
+	}
+	return luatest_lua_test_type_id__volatile;
+}
+
+
+gpointer luatest_lua_test_ref (gpointer instance) {
+	LuatestLuaTest* self;
+	self = instance;
+	g_atomic_int_inc (&self->ref_count);
+	return instance;
+}
+
+
+void luatest_lua_test_unref (gpointer instance) {
+	LuatestLuaTest* self;
+	self = instance;
+	if (g_atomic_int_dec_and_test (&self->ref_count)) {
+		LUATEST_LUA_TEST_GET_CLASS (self)->finalize (self);
+		g_type_free_instance ((GTypeInstance *) self);
+	}
+}
+
+
+gint luatest_main (gchar** args, int args_length1) {
 	gint result = 0;
+	LuatestLuaTest* s = NULL;
+	LuatestLuaTest* _tmp0_ = NULL;
 	gchar* code = NULL;
-	gchar* _tmp0_ = NULL;
-	lua_State* vm = NULL;
-	lua_State* _tmp1_ = NULL;
-	_tmp0_ = g_strdup ("\n" \
+	gchar* _tmp1_ = NULL;
+	_tmp0_ = luatest_lua_test_new ();
+	s = _tmp0_;
+	_tmp1_ = g_strdup ("\n" \
 "                    print \"Lua Code From Vala Code!\"\n" \
 "                    my_func(33)\n" \
 "                ");
-	code = _tmp0_;
-	_tmp1_ = (lua_State*) luaL_newstate ();
-	vm = _tmp1_;
-	luaL_openlibs (vm);
-	lua_register (vm, "my_func", _lua_test_my_func_lua_cfunction);
-	luaL_dostring (vm, code);
+	code = _tmp1_;
+	luatest_lua_test_LuaDoString (s, code);
 	result = 0;
-	_lua_close0 (vm);
 	_g_free0 (code);
+	_luatest_lua_test_unref0 (s);
 	return result;
 }
 
@@ -69,7 +308,7 @@ int main (int argc, char ** argv) {
 #if !GLIB_CHECK_VERSION (2,35,0)
 	g_type_init ();
 #endif
-	return lua_test_main (argv, argc);
+	return luatest_main (argv, argc);
 }
 
 
