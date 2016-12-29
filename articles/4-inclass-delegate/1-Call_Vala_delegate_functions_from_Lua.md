@@ -4,7 +4,9 @@ This is how to use Delegates to call Instance functions in Vala Classes
 So after much experimentation, I've found a way to declare a Lua callback
 function as the delegate type within the same class where you're trying to
 access the code from Lua. I think. There's one thing that's still tripping me up
-but I'll just continue investigating. for now,
+but I'll just continue investigating. For now, I know for sure that this will
+allow you to call an instance-level Vala function that is a member of a class
+from Lua.
 
 Of course, the essential feature of this tutorial is an instance-level Lua
 virtual machine and an instance-level vala function, registered within the
